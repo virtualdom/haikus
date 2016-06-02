@@ -2,7 +2,6 @@ const Boom = require('boom');
 const Joi = require('joi');
 const Moment = require('moment');
 const Mongo = require('mongodb');
-const Path = require('path');
 
 var connections = {};
 
@@ -23,6 +22,12 @@ function dbConnect (dbUrl, next) {
 
 exports.register = (server, options, next) => {
     if (!options.credentials) return next(new Error('Missing credentials.'));
+
+    server.auth.strategy('simple', 'basic', {
+        validateFunc (request, username, password, next) {
+            return next(null, (username === options.credentials.authPassword), {});
+        }
+    });
 
     server.route({
         method: 'GET',
@@ -66,7 +71,7 @@ exports.register = (server, options, next) => {
             handler (req, reply) {
                 dbConnect(options.credentials.db, (error, client) => {
                     if (error) return reply(error);
-                    
+
                     client.collection('haikus').findOne({id: req.params.id.toString()}, {_id: 0}, (error, haiku) => {
                         if (error) return reply(error);
 
@@ -110,7 +115,7 @@ exports.register = (server, options, next) => {
                                 if (error) return reply(error);
 
                                 return reply(haiku);
-                            }); 
+                            });
                         });
                     });
                 });
@@ -119,7 +124,8 @@ exports.register = (server, options, next) => {
                 payload: {
                     text: Joi.string().required()
                 }
-            }
+            },
+            auth: 'simple'
         }
     });
 
