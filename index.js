@@ -1,7 +1,9 @@
+const Basic = require('hapi-auth-basic');
 const Hapi = require('hapi');
+
 const credentials = require('./credentials');
 
-var server = new Hapi.Server({
+const server = new Hapi.Server({
     connections: {
         router: {
             stripTrailingSlash: true
@@ -12,6 +14,7 @@ var server = new Hapi.Server({
 server.connection({ port: process.env.PORT || 80 });
 
 server.register([
+    Basic,
     { register: require('./routes'), options: { credentials }}
 ], (error) => {
     if (error) throw (error);
